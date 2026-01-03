@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PII Detection & De-Identification Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-shield-alt"></i> PII Detection & De-Identification Tool</h1>
+                <p>Scan files, configure masking, and generate advanced accuracy reports</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- File Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <h3>Upload Your File</h3>
+                    <p>Drag and drop your file here or click to browse</p>
+                    <p class="file-types">Supported: CSV, TXT, PDF files</p>
+                    <input type="file" id="fileInput" accept=".csv,.txt,.pdf" hidden>
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i> Select File
+                    </button>
+                </div>
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <div class="file-details">
+                        <i class="fas fa-file"></i>
+                        <span id="fileName"></span>
+                        <button class="btn btn-secondary btn-sm" onclick="clearFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Tabs -->
+            <section class="config-section">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('patterns')">
+                        <i class="fas fa-cog"></i> Pattern Configuration
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('masking')">
+                        <i class="fas fa-mask"></i> De-Identification Settings
+                    </button>
+                </div>
+
+                <!-- Pattern Configuration Tab -->
+                <div id="patternsTab" class="tab-content active">
+                    <div class="config-group">
+                        <h3>Regex Pattern Configuration</h3>
+                        <div class="pattern-mode">
+                            <label class="radio-label">
+                                <input type="radio" name="patternMode" value="preset" checked>
+                                <span>Use Preset Patterns</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="patternMode" value="custom">
+                                <span>Use Custom Patterns</span>
+                            </label>
+                        </div>
+
+                        <div id="presetSection" class="preset-section">
+                            <label for="presetSelect">Select Preset:</label>
+                            <select id="presetSelect" class="form-control">
+                                <option value="Indian (Default)">Indian (Default)</option>
+                            </select>
+                        </div>
+
+                        <div id="customSection" class="custom-section" style="display: none;">
+                            <div class="custom-patterns" id="customPatterns">
+                                <!-- Custom pattern inputs will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Masking Configuration Tab -->
+                <div id="maskingTab" class="tab-content">
+                    <div class="config-group">
+                        <h3>De-Identification & Validation Settings</h3>
+                        <div class="masking-table">
+                            <div class="table-header">
+                                <div>PII Type</div>
+                                <div>Enable</div>
+                                <div>Strategy</div>
+                                <div>Mask Char</div>
+                                <div>Expected Count</div>
+                            </div>
+                            <div id="maskingRows" class="table-body">
+                                <!-- Masking rows will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="action-section">
+                <button class="btn btn-success btn-lg" id="runDetection" onclick="runDetection()">
+                    <i class="fas fa-play"></i> Run Detection
+                </button>
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span>Processing...</span>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-tabs">
+                    <button class="result-tab-btn active" onclick="switchResultTab('summary')">
+                        <i class="fas fa-chart-bar"></i> Summary Report
+                    </button>
+                    <button class="result-tab-btn" onclick="switchResultTab('preview')">
+                        <i class="fas fa-table"></i> Data Preview
+                    </button>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="summaryTab" class="result-tab-content active">
+                    <div class="summary-content">
+                        <div class="summary-stats" id="summaryStats">
+                            <!-- Summary statistics will be populated -->
+                        </div>
+                        <div class="metrics-table" id="metricsTable">
+                            <!-- Metrics table will be populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Tab -->
+                <div id="previewTab" class="result-tab-content">
+                    <div class="preview-content">
+                        <div class="table-container">
+                            <table id="previewTable" class="data-table">
+                                <!-- Preview table will be populated -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Section -->
+                <div class="download-section">
+                    <button class="btn btn-primary" onclick="downloadDeidentified()">
+                        <i class="fas fa-download"></i> Download De-identified Data
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadSummary()">
+                        <i class="fas fa-file-alt"></i> Download Summary Report
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processing your file...</p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>
